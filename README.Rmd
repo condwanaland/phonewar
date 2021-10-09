@@ -1,0 +1,85 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# phonewar
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+`phonewar` provides a dataset containing peoples iPhone vs Android preferences based on a survey done by tech magazine 'The Hustle' (https://thehustle.co/home/).
+
+## Installation
+
+You can install the phonewar from Github with:
+
+``` r
+remotes::install_github("condwanaland/phonedata")
+```
+
+## Example
+
+To use `phonewar` first load it
+
+```{r example}
+library(phonewar)
+## basic example code
+```
+
+`phonedata` contains a single dataframe you can load. It contains information about the respondents phone preferences, their reasons for this preference, the city they come from, and metadata about this city (coordinates, population).
+
+```{r}
+phones <- phonedata
+head(phones)
+```
+
+You can check out some graphs of this data
+
+```{r, message=FALSE, dpi=300}
+library(dplyr)
+library(ggplot2)
+library(viridis)
+library(tidyr)
+phone_sum <- phonedata %>% 
+  group_by(phone_type) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = n/sum(n))
+ggplot(phone_sum, aes(y = phone_type, x = freq, fill = phone_type)) +
+  geom_col() +
+  geom_text(aes(label = paste0(round(freq, 3), "%"), hjust = 1.2), color = "grey") +
+  scale_fill_viridis(discrete = TRUE, option = "turbo")
+```
+
+```{r, dpi=300, message=FALSE}
+countries <- phonedata %>% 
+  group_by(country, phone_type) %>% 
+  summarise(n = n()) %>% 
+  mutate(freq = n/sum(n)) %>% 
+  filter(n > 1) %>% 
+  filter(!is.na(country)) %>% 
+  select(-n) %>% 
+  pivot_wider(names_from = phone_type, values_from = freq, values_fill = 0) %>% 
+  mutate(diff = Android - iPhone)
+
+ggplot(countries, aes(y = country, x = diff)) +
+  geom_col() +
+  labs(caption = "Negative values indicate preference for iPhone, positive for Android",
+       x = "Phone preference percentage") +
+  theme_bw()
+```
+
+
+## License
+
+The original collectors of this data was 'The Hustle' (https://thehustle.co/home/). The original version of the data can be found here (https://docs.google.com/spreadsheets/d/1UC2I7vO-bS4Qcv0neNRDqJU2qt1Q6ednz8232cmb0_g/edit#gid=430244235).
